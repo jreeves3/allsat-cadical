@@ -1,4 +1,4 @@
-all-CaDiCaL
+allsat-CaDiCaL
 ===============================================================================
 
 Satifiability Solver printing/counting all satisfying assignments.
