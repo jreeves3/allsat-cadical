@@ -1,7 +1,7 @@
 allsat-CaDiCaL
 ===============================================================================
 
-Satifiability Solver printing/counting all satisfying assignments.
+Satisfiability Solver printing/counting all satisfying assignments.
 
 General method:
 
