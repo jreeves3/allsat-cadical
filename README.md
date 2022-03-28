@@ -18,8 +18,10 @@ Use option `--allsat` for printing the assignments.
 
 Example use:
 
-`> ./build/cadical tour-7-4.cnf --allsat > temp.txt
- > grep "^s\|^v\|^n" temp.txt`
+```bash
+> ./build/cadical tour-7-4.cnf --allsat > temp.txt
+> grep "^s\|^v\|^n" temp.txt
+```
 
 Each satisfying assignment found is printed, along
 with the cummulative number of solutions.
