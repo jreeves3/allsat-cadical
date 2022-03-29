@@ -127,7 +127,10 @@ void External::extend () {
     assert (i != begin);
     while ((lit = *--i)) {
       if (satisfied) continue;
-      if ((ival (lit) > 0) && ((unsigned) abs(lit) < sol_used.size()) && sol_used[abs(lit)]) satisfied = true; // do not use "unassigned" variables
+      if (ival (lit) > 0) {
+        satisfied = true;
+        sol_used[abs(lit)] = true;
+      }
       assert (i != begin);
     }
     assert (i != begin);
