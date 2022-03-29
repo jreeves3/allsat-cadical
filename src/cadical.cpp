@@ -815,7 +815,11 @@ int App::main (int argc, char ** argv) {
       solver->message ("writing result to '%s'", write_result_path);
     }
 
-  if (res == 10) {
+  if (res >= 21) { // allsat, result is number of solutions
+    fprintf (write_result_file, "s %d SOLUTIONS\n", res-21);
+    res = 20;
+  }
+  else if (res == 10) {
     fputs ("s SATISFIABLE\n", write_result_file);
     if (witness)
       print_witness (write_result_file);

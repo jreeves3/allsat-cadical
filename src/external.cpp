@@ -305,6 +305,8 @@ int External::solve (bool preprocess_only) {
   
   check_solve_result (res);
   reset_limits ();
+  if (internal->only_loop) // found some sat insatnces
+    return (21 + total_sol_count);
   return res;
 }
 
