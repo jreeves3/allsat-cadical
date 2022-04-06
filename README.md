@@ -16,6 +16,11 @@ each resulting in a valid satisfying assignment.
 
 Use option `--allsat` for printing the assignments.
 
+Use option `--probvars=n` for setting problem variable cutoff.
+All variables strictly greater than `probvars` will be removed
+from blocking satisfying assignments. If `probvars` is not set,
+default is `maxvar`.
+
 Example use:
 
 ```bash

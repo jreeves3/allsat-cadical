@@ -129,7 +129,7 @@ void External::extend () {
       if (satisfied) continue;
       if (ival (lit) > 0) {
         satisfied = true;
-        sol_used[abs(lit)] = true;
+        sol_used[abs(lit)] = true; // redudndant marking here
       }
       assert (i != begin);
     }

@@ -228,10 +228,13 @@ void External::check_satisfiable () {
       if (sol_used[i]) tmp = vals[i] < 1 ? -i : i;
       else cnt++;
       if (tmp) {
-        char str[20];
-        sprintf (str, " %d", tmp);
-        fputs (str, file);
-        add (-tmp);
+        if ((abs (tmp) <= internal->opts.probvars) || !internal->opts.probvars ) {
+          // keeping only problem variables
+          char str[20];
+          sprintf (str, " %d", tmp);
+          fputs (str, file);
+          add (-tmp);
+        }
       }
       tmp = 0;
     }
