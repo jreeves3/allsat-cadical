@@ -16,6 +16,7 @@ External::External (Internal * i)
   assert (internal);
   assert (!internal->external);
   internal->external = this;
+  internal->only_loop = false;
 }
 
 External::~External () {
@@ -226,8 +227,8 @@ void External::check_satisfiable () {
     fputc ('v', file);
     for (unsigned i = 1; i != vals.size(); i++) {
       if (sol_used[i]) tmp = vals[i] < 1 ? -i : i;
-      else cnt++;
-      if (tmp) {
+      else if ((int) i <= internal->opts.probvars) cnt++; // only consider unassigned problem variables
+      if (tmp && e2i[i] && sol_used[i]) { // check this is an internal variable
         if ((abs (tmp) <= internal->opts.probvars) || !internal->opts.probvars ) {
           // keeping only problem variables
           char str[20];

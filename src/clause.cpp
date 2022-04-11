@@ -361,8 +361,15 @@ void Internal::add_new_original_clause () {
     } else {
       Clause * c = new_clause (false);
       watch_clause (c);
+//      printf("cl ");
+//      for (const_literal_iterator i = c->begin (); i != c->end (); i++) {
+//        int v = i2e[abs (*i)];
+//        v = *i < 0 ? -1 * v : v;
+//        printf("%d ",v);
+//      }
+//      printf("0\n");
     }
-    if (original.size () > size) {
+    if (original.size () > size && !only_loop) {
       external->check_learned_clause ();
       if (proof) {
         proof->add_derived_clause (clause);

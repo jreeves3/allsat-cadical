@@ -50,7 +50,7 @@ struct CubesWithStatus;
 
 struct External {
 
-  vector<bool> sol_used;       // marks varaibles used in solution
+  vector<int> sol_used;       // marks varaibles used in solution
   int total_sol_count;         // cummulative solution count
   /*==== start of state ==================================================*/
 

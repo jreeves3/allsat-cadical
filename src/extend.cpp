@@ -108,9 +108,9 @@ void External::extend () {
     if (i >= vals.size ())
       vals.resize (i + 1, false);
     if ( i >= sol_used.size ())
-      sol_used.resize (i + 1, false);
+      sol_used.resize (i + 1, 0);
     vals[i] = (internal->val (ilit) > 0);
-    sol_used[i] = true;
+    sol_used[i] = 2;
     updated++;
   }
   PHASE ("extend", internal->stats.extensions,
@@ -129,7 +129,7 @@ void External::extend () {
       if (satisfied) continue;
       if (ival (lit) > 0) {
         satisfied = true;
-        sol_used[abs(lit)] = true; // redudndant marking here
+        sol_used[abs(lit)] = 1; // redudndant marking here
       }
       assert (i != begin);
     }
@@ -147,10 +147,12 @@ void External::extend () {
           size_t idx = abs (lit);
 	  if (idx >= vals.size ())
 	    vals.resize (idx + 1, false);
+    if ( idx >= sol_used.size ())
+      sol_used.resize (idx + 1, 0);
           vals[idx] = !vals[idx];
           internal->stats.extended++;
           flipped++;
-          sol_used[idx] = true;
+          sol_used[idx] = 1;
         }
         assert (i != begin);
       }

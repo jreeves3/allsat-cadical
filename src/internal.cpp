@@ -584,7 +584,11 @@ int Internal::solve (bool preprocess_only) {
   assert (clause.empty ());
   START (solve);
   int res;
-  if (only_loop) res = cdcl_loop_with_inprocessing ();
+  if (only_loop) {
+    res = already_solved ();
+    if (!res) res = restore_clauses (); // if witness in clause, need to bring out of reconstruction stack...
+    if (!res) res = cdcl_loop_with_inprocessing ();
+  }
   else {
   
   if (preprocess_only) LOG ("internal solving in preprocessing only mode");
