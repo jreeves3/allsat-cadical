@@ -1,9 +1,9 @@
 allsat-CaDiCaL Script
 ===============================================================================
 
-in `allsat-script` is a script for using the CaDiCaL c++ API to extenerally 
+in `allsat-script` is a script for using the CaDiCaL c++ API to externally 
 enumerate satisfying assignments. This script can be moved into any version 
-of CaDiCaL with ths ISAPIR API support. 
+of CaDiCaL with ths IPASIR API support. 
 
 To make the script:
 
