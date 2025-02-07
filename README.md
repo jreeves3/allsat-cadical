@@ -1,3 +1,23 @@
+allsat-CaDiCaL Scrit
+===============================================================================
+
+in `allsat-script` is a script for using the CaDiCaL c++ API to extenerally 
+enumerate satisfying assignments. This script can be moved into any version 
+of CaDiCaL with ths ISAPIR API support. 
+
+To make the script:
+
+```bash
+> cd allsat-script/
+> make
+```
+
+To Run:
+
+```bash
+> ./allsat <Formula> [--datavars=<var>] [--printsolutions]
+```
+
 allsat-CaDiCaL
 ===============================================================================
 
@@ -16,9 +36,9 @@ each resulting in a valid satisfying assignment.
 
 Use option `--allsat` for printing the assignments.
 
-Use option `--probvars=n` for setting problem variable cutoff.
-All variables strictly greater than `probvars` will be removed
-from blocking satisfying assignments. If `probvars` is not set,
+Use option `--datavars=n` for setting problem variable cutoff.
+All variables strictly greater than `datavars` will be removed
+from blocking satisfying assignments. If `datavars` is not set,
 default is `maxvar`.
 
 Example use:

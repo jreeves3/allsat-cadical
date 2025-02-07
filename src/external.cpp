@@ -142,7 +142,7 @@ void External::add (int elit) {
   assert (!elit == !ilit);
   if (elit) LOG ("adding external %d as internal %d", elit, ilit);
   internal->add_original_lit (ilit);
-//  if (!internal->only_loop && abs(elit) <= internal->opts.probvars) freeze (elit);
+//  if (!internal->only_loop && abs(elit) <= internal->opts.datavars) freeze (elit);
 }
 
 void External::assume (int elit) {
@@ -228,9 +228,9 @@ void External::check_satisfiable () {
     fputc ('v', file);
     for (unsigned i = 1; i != vals.size(); i++) {
       if (sol_used[i]) tmp = vals[i] < 1 ? -i : i;
-      else if ((int) i <= internal->opts.probvars) cnt++; // only consider unassigned problem variables
+      else if ((int) i <= internal->opts.datavars) cnt++; // only consider unassigned problem variables
       if (tmp && sol_used[i]) { // check this is an internal variable
-        if ((abs (tmp) <= internal->opts.probvars) || !internal->opts.probvars ) {
+        if ((abs (tmp) <= internal->opts.datavars) || !internal->opts.datavars ) {
           // keeping only problem variables
           char str[20];
           sprintf (str, " %d", tmp);

@@ -105,7 +105,7 @@ int main (int argc, char *argv[]) {
   // ------------------------------------------------------------------
   // Read inputs
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <inputfile> [--dataVars=<Var>] [--printSolutions]" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " <inputfile> [--datavars=<Var>] [--printsolutions]" << std::endl;
     return 1;
   }
   string inputfile = argv[1];
@@ -115,9 +115,9 @@ int main (int argc, char *argv[]) {
   if (argc > 2) {
     for (int i = 2; i < argc; i++) {
       string arg = argv[i];
-      if (arg == "--printSolutions")
+      if (arg == "--printsolutions")
         printSolutions = true;
-      else if (arg.rfind("--dataVars=",0) == 0) {
+      else if (arg.rfind("--datavars=",0) == 0) {
         dataVars = atoi(arg.substr(11).c_str());
       }
     }
