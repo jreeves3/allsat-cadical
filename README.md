@@ -1,4 +1,4 @@
-allsat-CaDiCaL Scrit
+allsat-CaDiCaL Script
 ===============================================================================
 
 in `allsat-script` is a script for using the CaDiCaL c++ API to extenerally 
