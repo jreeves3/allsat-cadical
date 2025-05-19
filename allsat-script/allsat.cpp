@@ -72,19 +72,21 @@ int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<ve
 // Print out solution if printSolutions is set to true.
 // Add a clause to the solver that negates the current solution,
 // up to the dataVars.
-int noMinimize (CaDiCaL::Solver * solver, int dataVars, int nvars, bool printSolutions) {
+int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datavars, int nvars, bool printSolutions) {
 
   vector<int> clause;
   if (printSolutions) {
     cout << "v ";
-    for (int i = 1; i <= dataVars; i++) {
-      cout << solver->val (i) << " ";
+    for (int i = 1; i <= max_datavars; i++) {
+      if (is_data[i])
+        cout << solver->val (i) << " ";
     }
     cout << endl;
   }
 
-  for (int i = 1; i <= dataVars; i++) {
-    clause.push_back (-solver->val (i));
+  for (int i = 1; i <= max_datavars; i++) {
+    if (is_data[i])
+      clause.push_back (-solver->val (i));
   }
 
   for (auto lit : clause)
@@ -99,6 +101,7 @@ int main (int argc, char *argv[]) {
   // Start the timing
   auto start = std::chrono::high_resolution_clock::now();
 
+  // no longer supported with new data vars as list, but could be added if needed
   bool minimizeSolution = false;
 
 
@@ -127,6 +130,11 @@ int main (int argc, char *argv[]) {
 
   // ------------------------------------------------------------------
   // Read CNF from file
+
+  // optional line s for data vars
+  vector<int> dataVarsList;
+  bool dataVarsListSet = false;
+
   ifstream infile(inputfile);
   if (!infile) {
     cerr << "e Error: Could not open file " << inputfile << endl;
@@ -136,8 +144,27 @@ int main (int argc, char *argv[]) {
   int nvars = 0;
   int nclauses = 0;
   string s;
-  // parse header
+  // parse data vars
   while (infile >> s) {
+    if (s == "c") { // parse a comment line
+      getline(infile, s);
+      continue;
+    }
+    if (s == "s") {
+      // parse list of data vars "s <dataVars> 0"
+      while (infile >> s) {
+        if (s == "0") {
+          break;
+        }
+        dataVarsList.push_back(abs(stoi(s)));
+      }
+      dataVarsListSet = true;
+    }
+    if (s == "p") break;
+  }
+
+  // parse header
+  do {
     if (s == "c") { // parse a comment line
       getline(infile, s);
       continue;
@@ -151,11 +178,55 @@ int main (int argc, char *argv[]) {
       infile >> nvars >> nclauses;
       break;
     }
+  } while (infile >> s);
+
+  if (nvars <= 0) {
+    cerr << "e Error: Invalid number of variables" << endl;
+    return 1;
   }
 
-  if (dataVars == 0) {
-    dataVars = nvars;
+  if (dataVars > 0 && dataVarsListSet) {
+    cerr << "e Error: Cannot set data vars in both header and command line" << endl;
+    return 1;
   }
+
+  vector<bool> is_data;
+  int max_dataVars = 0;
+  is_data.resize(nvars + 1, false);
+  if (dataVarsListSet) {
+    for (int i = 0; i < dataVarsList.size(); i++) {
+      is_data[dataVarsList[i]] = true;
+      if (dataVarsList[i] > max_dataVars) {
+        max_dataVars = dataVarsList[i];
+      }
+    }
+  } else if (dataVars > 0) {
+    for (int i = 1; i <= dataVars; i++) {
+      is_data[i] = true;
+    }
+    max_dataVars = dataVars;
+  } else {
+    // all are data vars
+    for (int i = 1; i <= nvars; i++) {
+      is_data[i] = true;
+    }
+    max_dataVars = nvars;
+  }
+
+  // shrink is_data to size of max_dataVars
+  is_data.resize(max_dataVars + 1, false);
+
+  // if (dataVars == 0 && !dataVarsListSet) {
+  //   dataVars = nvars;
+  // }
+
+  // print out the data vars
+  // cout << "c data vars: " ;
+  // for (int i = 1; i <= nvars; i++) {
+  //   if (is_data[i]) {
+  //     cout << " " << i ;
+  //   }
+  // } cout << endl;
 
   vector<vector<int>> clauses;
   vector<int> clause;
@@ -189,7 +260,7 @@ int main (int argc, char *argv[]) {
       if (minimizeSolution)
         newSolutions = minimize_solution(solver, dataVars, nvars, clauses, used, printSolutions);
       else
-        newSolutions = noMinimize(solver, dataVars, nvars, printSolutions);
+        newSolutions = noMinimize(solver, is_data, max_dataVars, nvars, printSolutions);
       nSolutions += newSolutions;
       cout << "c Found " << newSolutions << " new solution(s) " << endl;
       cout << "c New total: " << nSolutions << endl; 
