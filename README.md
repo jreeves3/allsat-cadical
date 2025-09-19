@@ -39,7 +39,11 @@ Use option `--allsat` for printing the assignments.
 Use option `--datavars=n` for setting problem variable cutoff.
 All variables strictly greater than `datavars` will be removed
 from blocking satisfying assignments. If `datavars` is not set,
-default is `maxvar`.
+default is `maxvar`. 
+
+Alternatively, to set specific auxiliary variables, put the 
+list of auxilairy variables `s [<var>] 0` in the first line 
+of the input CNF file. 
 
 Example use:
 
