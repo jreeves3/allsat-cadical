@@ -15,7 +15,7 @@ To make the script:
 To Run:
 
 ```bash
-> ./allsat <Formula> [--datavars=<var>] [--printsolutions]
+> ./allsat <Formula> [--datavars=<var>] [--printsolutions] [--blocklits=<-1/1>]
 ```
 
 allsat-CaDiCaL
