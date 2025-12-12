@@ -14,7 +14,7 @@ using namespace std;
 
 // Greedily check if any of the problem variables do not need to be used in the solution.
 // Not sure if this will be useful, ignore for now.
-int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<vector<int>> & clauses, vector<int> & used, bool printSolutions) {
+int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<vector<int>> & clauses, vector<int> & used, bool printSolutions, int removeLits) {
   int nUnused = 0;
   fill(used.begin(), used.begin() + dataVars + 1, 0);
   if (dataVars > 0) {
@@ -62,8 +62,15 @@ int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<ve
     }
   }
 
-  for (int lit : clause)
+  for (int lit : clause) {
+    if (removeLits == -1 && lit > 0) {
+      continue;
+    }
+    if (removeLits == 1 && lit < 0) {
+      continue;
+    }
     solver->add (lit);
+  }
   solver->add (0);
 
   return 1 << nUnused;
@@ -72,7 +79,7 @@ int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<ve
 // Print out solution if printSolutions is set to true.
 // Add a clause to the solver that negates the current solution,
 // up to the dataVars.
-int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datavars, int nvars, bool printSolutions) {
+int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datavars, int nvars, bool printSolutions, int removeLits) {
 
   vector<int> clause;
   if (printSolutions) {
@@ -89,9 +96,19 @@ int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datava
       clause.push_back (-solver->val (i));
   }
 
-  for (auto lit : clause)
+  // cout << "Blocked : ";
+  for (auto lit : clause) {
+    if (removeLits == -1 && lit > 0) {
+      continue;
+    }
+    if (removeLits == 1 && lit < 0) {
+      continue;
+    }
+      // cout << lit << " ";
     solver->add (lit);
+  }
   solver->add (0);
+  // cout << endl;
 
   return 1;
 }
@@ -104,11 +121,13 @@ int main (int argc, char *argv[]) {
   // no longer supported with new data vars as list, but could be added if needed
   bool minimizeSolution = false;
 
+  int removeLits = 0;
+
 
   // ------------------------------------------------------------------
   // Read inputs
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <inputfile> [--datavars=<Var>] [--printsolutions]" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " <inputfile> [--datavars=<Var>] [--printsolutions] [--blocklits=<-1/1>]" << std::endl;
     return 1;
   }
   string inputfile = argv[1];
@@ -122,6 +141,17 @@ int main (int argc, char *argv[]) {
         printSolutions = true;
       else if (arg.rfind("--datavars=",0) == 0) {
         dataVars = atoi(arg.substr(11).c_str());
+        if (dataVars < 0) {
+          cerr << "e Error: Invalid value for datavars. Must be non-negative." << endl;
+          return 1;
+        }
+      }
+      else if (arg.rfind("--blocklits=",0) == 0) {
+        removeLits = atoi(arg.substr(13).c_str());
+        if (removeLits < -1 || removeLits > 1) {
+          cerr << "e Error: Invalid value for blocklits. Must be -1, 0, or 1." << endl;
+          return 1;
+        }
       }
     }
   }
@@ -258,9 +288,9 @@ int main (int argc, char *argv[]) {
     if (res == 10) {
       int newSolutions;
       if (minimizeSolution)
-        newSolutions = minimize_solution(solver, dataVars, nvars, clauses, used, printSolutions);
+        newSolutions = minimize_solution(solver, dataVars, nvars, clauses, used, printSolutions, removeLits);
       else
-        newSolutions = noMinimize(solver, is_data, max_dataVars, nvars, printSolutions);
+        newSolutions = noMinimize(solver, is_data, max_dataVars, nvars, printSolutions, removeLits);
       nSolutions += newSolutions;
       cout << "c Found " << newSolutions << " new solution(s) " << endl;
       cout << "c New total: " << nSolutions << endl; 
