@@ -14,7 +14,7 @@ using namespace std;
 
 // Greedily check if any of the problem variables do not need to be used in the solution.
 // Not sure if this will be useful, ignore for now.
-int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<vector<int>> & clauses, vector<int> & used, bool printSolutions, int removeLits) {
+int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<vector<int>> & clauses, vector<int> & used, bool printSolutions, int block_lits) {
   int nUnused = 0;
   fill(used.begin(), used.begin() + dataVars + 1, 0);
   if (dataVars > 0) {
@@ -63,10 +63,10 @@ int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<ve
   }
 
   for (int lit : clause) {
-    if (removeLits == -1 && lit > 0) {
+    if (block_lits == -1 && lit > 0) {
       continue;
     }
-    if (removeLits == 1 && lit < 0) {
+    if (block_lits == 1 && lit < 0) {
       continue;
     }
     solver->add (lit);
@@ -79,12 +79,17 @@ int minimize_solution (CaDiCaL::Solver *solver,int dataVars,int nvars, vector<ve
 // Print out solution if printSolutions is set to true.
 // Add a clause to the solver that negates the current solution,
 // up to the dataVars.
-int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datavars, int nvars, bool printSolutions, int removeLits) {
+int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datavars, int nvars, bool printSolutions, int block_lits, vector<bool> & used_vars) {
+
+  // cout << "Remove Lits: " << block_lits << endl;
 
   vector<int> clause;
   if (printSolutions) {
     cout << "v ";
     for (int i = 1; i <= max_datavars; i++) {
+      if (!used_vars[i]) {
+        continue;
+      }
       if (is_data[i])
         cout << solver->val (i) << " ";
     }
@@ -92,24 +97,27 @@ int noMinimize (CaDiCaL::Solver * solver, vector<bool> & is_data, int max_datava
   }
 
   for (int i = 1; i <= max_datavars; i++) {
+    if (!used_vars[i]) {
+        continue;
+      }
     if (is_data[i])
       clause.push_back (-solver->val (i));
   }
 
-  // cout << "Blocked : ";
+  if (printSolutions) cout << "c Blocked : ";
   for (auto lit : clause) {
-    if (removeLits == -1 && lit > 0) {
+    if (block_lits == -1 && lit < 0) {
       continue;
     }
-    if (removeLits == 1 && lit < 0) {
+    if (block_lits == 1 && lit > 0) {
       continue;
     }
-      // cout << lit << " ";
+    if (printSolutions) cout << lit << " ";
     solver->add (lit);
   }
   solver->add (0);
-  // cout << endl;
-
+  if (printSolutions) cout << "0"; 
+  if (printSolutions) cout << endl;
   return 1;
 }
 
@@ -121,22 +129,26 @@ int main (int argc, char *argv[]) {
   // no longer supported with new data vars as list, but could be added if needed
   bool minimizeSolution = false;
 
-  int removeLits = 0;
+  int block_lits = 0;
+  vector<bool> used_vars;
 
 
   // ------------------------------------------------------------------
   // Read inputs
   if (argc < 2) {
-    std::cerr << "Usage: " << argv[0] << " <inputfile> [--datavars=<Var>] [--printsolutions] [--blocklits=<-1/1>]" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " <inputfile> [--datavars=<Var>] [--printsolutions] [--blocklits=<-1/1>] [--cadical=<OptionName>=<OptionValue>]" << std::endl;
     return 1;
   }
   string inputfile = argv[1];
   int dataVars = 0;
   bool printSolutions = false;
 
+  CaDiCaL::Solver *solver = new CaDiCaL::Solver;
+
   if (argc > 2) {
     for (int i = 2; i < argc; i++) {
       string arg = argv[i];
+      // cout << "Processing argument: " << arg << endl;
       if (arg == "--printsolutions")
         printSolutions = true;
       else if (arg.rfind("--datavars=",0) == 0) {
@@ -147,16 +159,46 @@ int main (int argc, char *argv[]) {
         }
       }
       else if (arg.rfind("--blocklits=",0) == 0) {
-        removeLits = atoi(arg.substr(13).c_str());
-        if (removeLits < -1 || removeLits > 1) {
+        block_lits = atoi(arg.substr(12).c_str());
+        // cout << "Remove Lits set to " << block_lits << endl;
+        if (block_lits < -1 || block_lits > 1) {
           cerr << "e Error: Invalid value for blocklits. Must be -1, 0, or 1." << endl;
           return 1;
         }
       }
+      else if (arg.rfind("--cadical=",0) == 0) {
+        string option = arg.substr(10);
+        size_t eq_pos = option.find('=');
+        if (eq_pos != string::npos) {
+          string option_name = option.substr(0, eq_pos);
+          string option_value = option.substr(eq_pos + 1);
+          // parse option value as int
+          int option_value_int;
+          try {
+            option_value_int = stoi(option_value);
+            bool success = solver->set(option_name.c_str(), option_value_int);
+            if (!success) {
+              cerr << "e Error: Unknown cadical option or value " << option_name << " " << option_value << endl;
+              return 1;
+            }
+            continue;
+          } catch (const std::invalid_argument& ia) {
+            cout << "e Error: Invalid cadical option value " << option_name << " " << option_value << " Must be an integer." << endl;
+            return 1;
+          }
+        } else {
+          cerr << "e Error: Invalid cadical option format. Use --cadical=<OptionName>=<OptionValue>" << endl;
+          return 1;
+        }
+      }
+      else {
+        cerr << "e Error: Unknown argument " << arg << endl;
+        return 1;
+      }
     }
   }
 
-  CaDiCaL::Solver *solver = new CaDiCaL::Solver;
+  
 
   // ------------------------------------------------------------------
   // Read CNF from file
@@ -220,6 +262,9 @@ int main (int argc, char *argv[]) {
     return 1;
   }
 
+  // set used to all 0 
+  used_vars.resize(nvars + 1, 0);
+
   vector<bool> is_data;
   int max_dataVars = 0;
   is_data.resize(nvars + 1, false);
@@ -267,6 +312,8 @@ int main (int argc, char *argv[]) {
     }
     lit = stoi(s); // parse a literal; '0' for end of a clause
     solver->add(lit);
+    if (lit != 0)
+      used_vars[abs(lit)] = true;
     if (minimizeSolution) {
       if (lit == 0) {
         clauses.push_back(clause);
@@ -288,9 +335,9 @@ int main (int argc, char *argv[]) {
     if (res == 10) {
       int newSolutions;
       if (minimizeSolution)
-        newSolutions = minimize_solution(solver, dataVars, nvars, clauses, used, printSolutions, removeLits);
+        newSolutions = minimize_solution(solver, dataVars, nvars, clauses, used, printSolutions, block_lits);
       else
-        newSolutions = noMinimize(solver, is_data, max_dataVars, nvars, printSolutions, removeLits);
+        newSolutions = noMinimize(solver, is_data, max_dataVars, nvars, printSolutions, block_lits, used_vars);
       nSolutions += newSolutions;
       cout << "c Found " << newSolutions << " new solution(s) " << endl;
       cout << "c New total: " << nSolutions << endl; 
