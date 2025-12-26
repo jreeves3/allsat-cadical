@@ -15,8 +15,19 @@ To make the script:
 To Run:
 
 ```bash
-> ./allsat <Formula> [--datavars=<var>] [--printsolutions] [--blocklits=<-1/1>]
+> ./allsat <Formula> [--datavars=<var>] [--printsolutions] [--blocklits=<-1/1>] [--cadical=<OptionName>=<OptionValue>]
 ```
+
+--blocklits=1 uses positive literals from the assignmet in the blocking clause 
+
+OptionValue for cadical must be an integer
+
+Example usage: 
+
+```bash
+> ./allsat simp.cnf --blocklits=1 --cadical=forcephase=1 --cadical=phase=0 --printsolutions
+```
+
 
 allsat-CaDiCaL
 ===============================================================================
